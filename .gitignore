@@ -1,0 +1,7 @@
+/temp
+/source/*/bin
+/source/*/obj
+*.suo
+*.user
+*.cache
+*.orig
