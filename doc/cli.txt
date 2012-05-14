@@ -1,0 +1,34 @@
+Database schema
+===============
+
+Tables:
+- mdl_settings
+- tasks
+- tags
+- time_slices
+- tasks_and_tags
+
+Task:
+- id
+- name
+- comment
+- status
+- last_changed_at
+- running_slice_id
+- deadline
+
+Tag:
+- id
+- name
+
+TimeSlice:
+- id
+- task_id
+- comment
+- start
+- stop
+- is_running
+
+Table mdl_settings:
+- name
+- value

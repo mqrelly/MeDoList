@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+# encoding: utf-8
+
+$MDL_VERSION = "v0.1"
+$MDL_ROOT = File.expand_path(File.dirname __FILE__)
+$MDL_FILE = "test.db"
+
+require "rubygems"
+require File.join $MDL_ROOT, "model.rb"
+require File.join $MDL_ROOT, "cli_application.rb"
+
+MeDoList::CliApplication.run(ARGV)

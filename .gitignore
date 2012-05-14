@@ -1,7 +1,10 @@
+*.orig
+
 /temp
+test.db
+
 /source/*/bin
 /source/*/obj
 *.suo
 *.user
 *.cache
-*.orig
