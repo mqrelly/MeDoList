@@ -32,7 +32,12 @@ module MeDoList
       db = Model.open $MDL_FILE
       res = db.execute "select id,name,status from tasks"
       res.each do |row|
-        puts "\##{row[0].to_s.ljust 6} #{row[1]} #{row[2]}"
+        puts "\##{row[0].to_s.ljust 6} #{row[1]} #{Model.status_name row[2]}"
+        tag_ids = db.execute "select tag_id from tasks_and_tags where task_id=#{row[0]}"
+        tag_ids.each do |tag_row|
+          tag_name = db.get_first_value "select name from tags where id=#{tag_row[0]}"
+          puts "  #{tag_name}"
+        end
       end
     end
 
@@ -44,11 +49,13 @@ module MeDoList
       # Parse optional arguments
       options = ArgsParser.new do
         option :start, /^-S|--start$/
+
         option :tag, /^-t|--tag$/ do |args|
           args.shift
           raise "Missing tag-list for --tag option!" unless args.size > 0
           args.first.split(",").map(&strip)
         end
+
         option :mark, /^-m|--mark$/ do |args|
           args.shift
           raise "Missing status for --mark option!" unless args.size > 0
@@ -56,6 +63,7 @@ module MeDoList
           raise "Unknown status '#{status}'!" unless status =~ /^active|suspended|done|canceled$/
           status
         end
+
         option :force, /^-f|--force$/
       end.parse(argv)
 
@@ -83,32 +91,46 @@ SQL
 
         # Tag new task
         # TODO
-        
+
         # Mark new task
         # TODO
-        
+
         # Start new task
         # TODO
       end
-    ensure
-      begin
-        db.close if db
-      rescue
+    end
+
+    def tag( argv )
+      db = Model.open $MDL_FILE
+      db.transaction do |db|
+        # Process task-reference
+        raise "Missing <task-ref> argument!" unless argv.size > 0
+        task_ref = argv.shift.strip
+        task_id = Model.lookup_task_ref db, task_ref
+
+        # Process tag-list argument
+        raise "Missing <tag-list> argument!" unless argv.size > 0
+        tag_names = Model.tag_name_list argv.shift
+        tag_ids = tag_names.map {|tn| Model.get_or_create_tag db, tn}
+
+        # Check for unprocessed args
+        raise "Unknown argument: #{argv.first}" if argv.size > 0
+
+        # Add tags to the task
+        tag_ids.each do |tag_id|
+          Model.tag_task db, task_id, tag_id
+        end
       end
     end
 
     def help( argv )
-      if argv.empty?
-        puts <<EOF
+      puts <<EOF
 Usage: mdl [-s|--silent|-v|--verbose] [-n|--dry-run] <command> <command-args>
 
 TODO:
 - global options
 - list commands
 EOF
-      else
-        puts "TODO"
-      end
     end
 
     def version( argv )

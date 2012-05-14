@@ -6,7 +6,7 @@ Basic operations:
 - Start task
 - Stop task
 - Tag task
-- Change task status
+- Change task status (suspend,resume,done,cancel)
 - Filter and list tasks
 
 'add' syntax:
@@ -16,3 +16,9 @@ Basic operations:
 'list' syntax:
 
     $ mdl list
+
+'tag' syntax:
+
+    $ mdl tag <task-ref> <tag-list>
+
+<task-ref>:= #<task-id>|<task-name>|#<last-referenced-number>
