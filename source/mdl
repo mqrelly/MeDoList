@@ -6,7 +6,7 @@ $MDL_ROOT = File.expand_path(File.dirname __FILE__)
 $MDL_FILE = "test.db"
 
 require "rubygems"
-require File.join $MDL_ROOT, "model.rb"
+require File.join $MDL_ROOT, "model", "model.rb"
 require File.join $MDL_ROOT, "cli_application.rb"
 
 MeDoList::CliApplication.run(ARGV)

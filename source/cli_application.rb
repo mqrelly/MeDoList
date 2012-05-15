@@ -110,15 +110,15 @@ SQL
 
         # Process tag-list argument
         raise "Missing <tag-list> argument!" unless argv.size > 0
-        tag_names = Model.tag_name_list argv.shift
-        tag_ids = tag_names.map {|tn| Model.get_or_create_tag db, tn}
+        tag_names = Model::Tag.list_to_names argv.shift
+        tag_ids = tag_names.map {|tn| Model::Tag.get_or_create db, tn}
 
         # Check for unprocessed args
         raise "Unknown argument: #{argv.first}" if argv.size > 0
 
         # Add tags to the task
         tag_ids.each do |tag_id|
-          Model.tag_task db, task_id, tag_id
+          Model::Tag.tag_task db, task_id, tag_id
         end
       end
     end

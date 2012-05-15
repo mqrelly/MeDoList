@@ -1,8 +1,9 @@
 # encoding: utf-8
 
-require "sqlite3"
-
 $MDL_SCHEMA_VERSION = "1"
+
+require "sqlite3"
+require File.join $MDL_ROOT, "model", "tag.rb"
 
 
 module MeDoList
@@ -27,7 +28,7 @@ SQL
         db.execute <<-SQL
           create table tags (
             id integer not null primary key autoincrement,
-            name text not null unique)
+            name text collate nocase not null unique)
 SQL
         db.execute <<-SQL
           create table tasks (
@@ -84,26 +85,6 @@ SQL
       when "canceled" then 3
       else raise ArgumentError, "Invalid status name '#{status}'."
       end
-    end
-
-    def self.tag_name_list( arg )
-      arg.split(",").map{|t| t.strip.downcase}.select{|t| t && t!=""}
-    end
-
-    def self.get_or_create_tag( db, name )
-      tag_id = db.get_first_value "select id from tags where name='#{name}'"
-      unless tag_id
-        db.execute "insert into tags (name) values('#{name}')"
-        tag_id = db.last_insert_row_id
-      end
-      tag_id
-    end
-
-    def self.tag_task( db, task_id, tag_id )
-      db.execute "insert into tasks_and_tags (task_id,tag_id) " <<
-        "values(#{task_id},#{tag_id})"
-    rescue => er
-      puts er.to_s
     end
 
     def self.lookup_task_ref( db, task_ref )
