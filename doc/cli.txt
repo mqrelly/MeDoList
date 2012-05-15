@@ -1,34 +1,24 @@
-Database schema
-===============
+CLI syntax
+==========
 
-Tables:
-- mdl_settings
-- tasks
-- tags
-- time_slices
-- tasks_and_tags
+Basic operations:
+- Add task
+- Start task
+- Stop task
+- Tag task
+- Change task status (suspend,resume,done,cancel)
+- Filter and list tasks
 
-Task:
-- id
-- name
-- comment
-- status
-- last_changed_at
-- running_slice_id
-- deadline
+'add' syntax:
 
-Tag:
-- id
-- name
+    $ mld add <task-name> [-t <tag-list>] [-m <status>] [-S|--start]
 
-TimeSlice:
-- id
-- task_id
-- comment
-- start
-- stop
-- is_running
+'list' syntax:
 
-Table mdl_settings:
-- name
-- value
+    $ mdl list
+
+'tag' syntax:
+
+    $ mdl tag <task-ref> <tag-list>
+
+<task-ref>:= #<task-id>|<task-name>|#<last-referenced-number>
