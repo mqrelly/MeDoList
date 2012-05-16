@@ -34,9 +34,9 @@ Syntax
 
     $ mdl stop <task-ref>|--all
 
-'ref-list' syntax:
+'refs' syntax:
 
-    $ mdl ref-list [--limit|-l <max-size>]
+    $ mdl refs [--limit|-l <max-size>]
 
 
 Definitions

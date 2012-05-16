@@ -13,11 +13,11 @@ module MeDoList
     end
 
     def initialize( argv )
-      @globals = global_opts = ArgsParser.new do
+      @globals = ArgsParser.new do
         option :verbose, /^-v|--verbose$/
         option :silent, /^-s|--silent$/
         option :dry_run, /^-n|--dry-run$/
-        stop_on "help", "version", "add", "start", "stop", "mark", "tag", "list"
+        stop_on *%w(help version add start stop mark tag list refs)
       end.parse(argv)
     end
 
@@ -164,6 +164,23 @@ module MeDoList
       raise
     else
       db.commit
+    end
+
+    def refs( argv )
+      # Process args
+      opts = ArgsParser.new do
+        option :limit, /^--limit|-l$/ do |args|
+          raise "Missing limit number argument." if args.size == 1
+          args.shift
+          args.first.to_i
+        end
+      end.parse argv
+
+      # List references
+      db = Model.open $MDL_FILE
+      Model::LastReferencedTasks.list(db,opts[:limit]) do |ref_num,task_id|
+        puts "~#{ref_num.to_s.ljust 6} ##{task_id}"
+      end
     end
 
     def help( argv )

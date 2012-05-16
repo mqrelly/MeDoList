@@ -3,5 +3,4 @@ MeDoList ToDo
 
 - Basic 'stop' cmd
 - Basic 'mark' cmd
-- 'ref-list' cmd
 - Make 'list' cmd use a template system for outputting tasks

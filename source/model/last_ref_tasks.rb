@@ -32,6 +32,24 @@ module MeDoList
         db.execute "insert into last_ref_tasks (ref_num,task_id)"<<
           " values(1,#{task_id})"
       end
+
+      def self.list( db, limit=nil )
+        q = "select * from last_ref_tasks"
+        q << " limit #{limit}" if limit
+        res = db.execute q
+
+        if block_given?
+          res.each do |row|
+            yield row[0], row[1]
+          end
+        else
+          a = []
+          res.each do |row|
+            a << [row[0], row[1]]
+          end
+          a
+        end
+      end
     end
 
   end
