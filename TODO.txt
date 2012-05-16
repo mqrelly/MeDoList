@@ -3,6 +3,6 @@ MeDoList ToDo
 
 - Basic 'stop' cmd
 - Basic 'mark' cmd
-- Last-Referenced-Tasks list
 - Correctly resolve <task-ref>s
+- 'ref-list' cmd
 - Make 'list' cmd use a template system for outputting tasks

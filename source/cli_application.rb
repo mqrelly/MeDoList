@@ -76,6 +76,7 @@ module MeDoList
 
       # Open database
       db = Model.open $MDL_FILE
+      db.transaction
 
       # Check for same named tasks
       unless options[:force]
@@ -89,49 +90,64 @@ module MeDoList
         end
       end
 
-      db.transaction do |db|
-        # Add new task
-        db.execute <<-SQL
-          insert into tasks (name,status,last_changed) values(
-            '#{task_name}', 0, datetime('now'))
-SQL
+      # Add new task
+      change_time = Time.now
+      db.execute "insert into tasks (name,last_changed)"<<
+      " values('#{task_name}', #{change_time.to_i})"
+      task_id = db.last_insert_row_id
 
-        # Tag new task
-        # TODO
+      # Tag new task
+      # TODO
 
-        # Mark new task
-        # TODO
+      # Mark new task
+      # TODO
 
-        # Start new task
-        # TODO
-      end
+      # Start new task
+      # TODO
+
+      # Save LRT
+      Model::LastReferencedTasks.put db, task_id
+    rescue
+      db.rollback if db && !db.closed?
+      raise
+    else
+      db.commit
     end
 
     def tag( argv )
       db = Model.open $MDL_FILE
-      db.transaction do |db|
-        # Process task-reference
-        raise "Missing <task-ref> argument!" unless argv.size > 0
-        task_ref = argv.shift.strip
-        task_id = Model::Task.lookup_task_ref db, task_ref
+      db.transaction
 
-        # Process tag-list argument
-        raise "Missing <tag-list> argument!" unless argv.size > 0
-        tag_names = Model::Tag.list_to_names argv.shift
-        tag_ids = tag_names.map {|tn| Model::Tag.get_or_create db, tn}
+      # Process task-reference
+      raise "Missing <task-ref> argument!" unless argv.size > 0
+      task_ref = argv.shift.strip
+      task_id = Model::Task.lookup_task_ref db, task_ref
 
-        # Check for unprocessed args
-        raise "Unknown argument: #{argv.first}" if argv.size > 0
+      # Process tag-list argument
+      raise "Missing <tag-list> argument!" unless argv.size > 0
+      tag_names = Model::Tag.list_to_names argv.shift
+      tag_ids = tag_names.map {|tn| Model::Tag.get_or_create db, tn}
 
-        # Add tags to the task
-        tag_ids.each do |tag_id|
-          Model::Tag.tag_task db, task_id, tag_id
-        end
+      # Check for unprocessed args
+      raise "Unknown argument: #{argv.first}" if argv.size > 0
+
+      # Add tags to the task
+      tag_ids.each do |tag_id|
+        Model::Tag.tag_task db, task_id, tag_id
       end
+
+      # Save LRT
+      Model::LastReferencedTasks.put db, task_id
+    rescue
+      db.rollback if db && !db.closed?
+      raise
+    else
+      db.commit
     end
 
     def start( argv )
       db = Model.open $MDL_FILE
+      db.transaction
 
       # Parse <task-ref>
       raise "Missing <task-ref> argument!" if argv.size == 0
@@ -139,9 +155,15 @@ SQL
       task_id = Model::Task.lookup_task_ref db, task_ref
 
       # Start task
-      db.transaction do |db|
-        Model::Task.start db, task_id
-      end
+      Model::Task.start db, task_id
+
+      # Save LRT
+      Model::LastReferencedTasks.put db, task_id
+    rescue
+      db.rollback if db && !db.closed?
+      raise
+    else
+      db.commit
     end
 
     def help( argv )

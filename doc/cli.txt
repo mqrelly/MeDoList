@@ -8,6 +8,7 @@ Basic operations:
 - Stop task
 - Tag task
 - Change task status (suspend,resume,done,cancel)
+- Show last-referenced-tasks
 
 
 Syntax
@@ -33,9 +34,13 @@ Syntax
 
     $ mdl stop <task-ref>|--all
 
+'ref-list' syntax:
+
+    $ mdl ref-list [--limit|-l <max-size>]
+
 
 Definitions
 -----------
 
 <tag-list>:= <tag-name>[,<tag-name>]*
-<task-ref>:= #<task-id>|<task-name>|#<last-referenced-number>
+<task-ref>:= #<task-id>|^<task-id>|<task-name>|#<last-ref-number>

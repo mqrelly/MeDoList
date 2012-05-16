@@ -5,6 +5,7 @@ $MDL_SCHEMA_VERSION = "1"
 require "sqlite3"
 require File.join $MDL_ROOT, "model", "tag.rb"
 require File.join $MDL_ROOT, "model", "task.rb"
+require File.join $MDL_ROOT, "model", "last_ref_tasks.rb"
 
 
 module MeDoList
@@ -42,7 +43,7 @@ SQL
 SQL
         db.execute <<-SQL
           create table last_ref_tasks (
-            place integer not null primary key,
+            ref_num integer not null primary key,
             task_id integer not null)
 SQL
         db.execute <<-SQL

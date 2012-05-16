@@ -6,7 +6,7 @@ module MeDoList
     class Task
       def self.lookup_task_ref( db, task_ref )
         case task_ref
-        when /#\d+/
+        when /(#|\^)\d+/
           task_id = task_ref[1..task_ref.length-1].to_i
           task_count_with_id = db.get_first_value "select count(id) from tasks where id=#{task_id}"
           raise "Task ##{task_id} not found." if task_count_with_id == 0
