@@ -11,8 +11,14 @@ module MeDoList
           task_count_with_id = db.get_first_value "select count(id) from tasks where id=#{task_id}"
           raise "Task ##{task_id} not found." if task_count_with_id == 0
 
-        when /~\d*/
-          # TODO
+        when /(#|\^)~\d*/
+          if task_ref.length == 2
+            ref_num = 1
+          else
+            ref_num = task_ref[2..task_ref.length-1].to_i
+          end
+          task_id = LastReferencedTasks.get db, ref_num
+          raise "Last task reference ~#{ref_num} not found." unless task_id
 
         else
           # TODO: sanitize task_ref before!

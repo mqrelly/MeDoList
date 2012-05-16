@@ -43,4 +43,4 @@ Definitions
 -----------
 
 <tag-list>:= <tag-name>[,<tag-name>]*
-<task-ref>:= #<task-id>|^<task-id>|<task-name>|#<last-ref-number>
+<task-ref>:= (#|^)<task-id>|<task-name>|(#|^)~<last-ref-number>
