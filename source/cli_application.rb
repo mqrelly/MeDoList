@@ -59,13 +59,13 @@ module MeDoList
 
         option :tag, /^-t|--tag$/ do |args|
           args.shift
-          raise "Missing tag-list for --tag option!" unless args.size > 0
-          args.first.split(",").map(&strip)
+          raise "Missing <tag-list> for --tag option!" if args.size < 1
+          args.first.split(",").map{|t| t.strip}
         end
 
         option :mark, /^-m|--mark$/ do |args|
           args.shift
-          raise "Missing status for --mark option!" unless args.size > 0
+          raise "Missing status for --mark option!" if args.size < 1
           Model::status_code args.first.strip
         end
 
@@ -98,7 +98,10 @@ module MeDoList
       # TODO
 
       # Mark new task
-      # TODO
+      if options[:mark]
+        status_code = options[:mark]
+        Model::Task.set_status db, task_id, status_code
+      end
 
       # Start new task
       # TODO
@@ -171,9 +174,7 @@ module MeDoList
       if task_ref == "--all"
         # Stop all runnung tasks
         db = Model.open $MDL_FILE
-        db.transaction
-        begin
-
+        db.transaction do |db|
           # Get all the running tasks
           task_ids = []
           res = db.execute "select id from tasks where running_slice_id > 0"
@@ -185,11 +186,6 @@ module MeDoList
           task_ids.each do |task_id|
             Model::Task.stop db, task_id
           end
-        rescue
-          db.rollback
-          raise
-        else
-          db.commit
         end
       else
         # Stop only the given one
@@ -199,7 +195,7 @@ module MeDoList
         task_id = Model::Task.lookup_task_ref db, task_ref
 
         if argv.size > 0
-          opts = ArgsParser.new do
+          options = ArgsParser.new do
             option :mark, /^-m|--mark$/ do |args|
               args.shift
               raise "Missing status for --mark option." if args.size < 1
@@ -207,34 +203,58 @@ module MeDoList
             end
           end.parse argv
         else
-          opts = {}
+          options = {}
         end
 
-        db.transaction
-        begin
+        db.transaction do |db|
           # Stop the task
           Model::Task.stop db, task_id
 
           # Change status
-          if opts[:mark]
-            new_status = opts[:mark]
+          if options[:mark]
+            new_status = options[:mark]
             Model::Task.set_status db, task_id, new_status
           end
 
           # Save LRT
           Model::LastReferencedTasks.put db, task_id
-        rescue
-          db.rollback
-          raise
-        else
-          db.commit
         end
+      end
+    end
+
+    def mark( argv )
+      # Process args
+      raise "Missing <task-ref> argument." if argv.size < 1
+      raise "Missing <status> argument." if argv.size < 2
+      raise "Unknown argument." if argv.size > 2
+
+      db = Model.open $MDL_FILE
+
+      # Lookup referenced task id
+      task_ref = argv.shift.strip
+      task_id = Model::Task.lookup_task_ref db, task_ref
+
+      # Parse new status
+      status_name = argv.shift.strip
+      status_code = Model.status_code status_name
+
+      # Check if status will finish the task and if it's running
+      if status_code >= 2 && Model::Task.get_running_slice_id(db, task_id)
+        raise "Task #{task_ref} is still running."
+      end
+
+      db.transaction do |db|
+        # Change status
+        Model::Task.set_status db, task_id, status_code
+
+        # Save LRT
+        Model::LastReferencedTasks.put db, task_id
       end
     end
 
     def refs( argv )
       # Process args
-      opts = ArgsParser.new do
+      options = ArgsParser.new do
         option :limit, /^--limit|-l$/ do |args|
           raise "Missing limit number argument." if args.size == 1
           args.shift
@@ -244,7 +264,7 @@ module MeDoList
 
       # List references
       db = Model.open $MDL_FILE
-      Model::LastReferencedTasks.list(db,opts[:limit]) do |ref_num,task_id|
+      Model::LastReferencedTasks.list(db,options[:limit]) do |ref_num,task_id|
         puts "~#{ref_num.to_s.ljust 6} ##{task_id}"
       end
     end

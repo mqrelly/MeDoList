@@ -1,5 +1,6 @@
 MeDoList ToDo
 =============
 
-- Basic 'mark' cmd
-- Make 'list' cmd use a template system for outputting tasks
+- Make 'list' cmd use a template system for outputting tasks.
+- Before operations check if task's status permits it.
+- Only keep a max number of LRTs in db.

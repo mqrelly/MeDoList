@@ -39,6 +39,10 @@ Syntax
 
     $ mdl stop <task-ref>|--all
 
+'mark' syntax:
+
+    $ mdl mark <task-ref> <status>
+
 'refs' syntax:
 
     $ mdl refs [--limit|-l <max-size>]
@@ -49,3 +53,4 @@ Definitions
 
 <tag-list>:= <tag-name>[,<tag-name>]*
 <task-ref>:= (#|^)<task-id>|<task-name>|(#|^)~<last-ref-number>
+<status>:= active|suspended|done|canceled
