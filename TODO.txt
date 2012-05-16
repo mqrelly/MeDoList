@@ -1,6 +1,5 @@
 MeDoList ToDo
 =============
 
-- Basic 'stop' cmd
 - Basic 'mark' cmd
 - Make 'list' cmd use a template system for outputting tasks

@@ -58,10 +58,42 @@ module MeDoList
         slice_id
       end
 
+      def self.stop( db, task_id )
+        # Get running timeslice
+        running_slice_id = get_running_slice_id db, task_id
+        raise "Running timeslice not found." unless running_slice_id
+
+        stop_time = Time.now
+
+        # Update timeslice
+        db.execute "update timeslices set stop=#{stop_time.to_i}"<<
+          " where id=#{running_slice_id}"
+
+        # Clear ref to runnning timeslice
+        db.execute "update tasks set running_slice_id=NULL"<<
+          " where id=#{task_id}"
+
+        # Update task.last_changed
+        update_last_changed db, task_id, stop_time
+
+        true
+      end
+
+      def self.set_status( db, task_id, status_code )
+        db.execute "update tasks set status=#{status_code}"<<
+          " where id=#{task_id}"
+
+        raise "Failed to set task.status." if db.changes != 1
+
+        update_last_changed db, task_id
+      end
+
       def self.update_last_changed( db, task_id, changed_time=Time.now )
         db.execute "update tasks set last_changed=#{changed_time.to_i}"<<
           " where id=#{task_id}"
-        raise "Failed to update task.last_changed." if db.changes == 0
+
+        raise "Failed to update task.last_changed." if db.changes != 1
+        true
       end
     end
 

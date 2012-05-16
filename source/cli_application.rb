@@ -66,9 +66,7 @@ module MeDoList
         option :mark, /^-m|--mark$/ do |args|
           args.shift
           raise "Missing status for --mark option!" unless args.size > 0
-          status = args.first.strip
-          raise "Unknown status '#{status}'!" unless status =~ /^active|suspended|done|canceled$/
-          status
+          Model::status_code args.first.strip
         end
 
         option :force, /^-f|--force$/
@@ -164,6 +162,74 @@ module MeDoList
       raise
     else
       db.commit
+    end
+
+    def stop( argv )
+      raise "Missing argument for stop command." if argv.size < 1
+      task_ref = argv.shift
+
+      if task_ref == "--all"
+        # Stop all runnung tasks
+        db = Model.open $MDL_FILE
+        db.transaction
+        begin
+
+          # Get all the running tasks
+          task_ids = []
+          res = db.execute "select id from tasks where running_slice_id > 0"
+          res.each do |row|
+            task_ids << row[0]
+          end
+
+          # Stop them one by one
+          task_ids.each do |task_id|
+            Model::Task.stop db, task_id
+          end
+        rescue
+          db.rollback
+          raise
+        else
+          db.commit
+        end
+      else
+        # Stop only the given one
+        db = Model.open $MDL_FILE
+
+        # Parse task_ref
+        task_id = Model::Task.lookup_task_ref db, task_ref
+
+        if argv.size > 0
+          opts = ArgsParser.new do
+            option :mark, /^-m|--mark$/ do |args|
+              args.shift
+              raise "Missing status for --mark option." if args.size < 1
+              Model.status_code args.first
+            end
+          end.parse argv
+        else
+          opts = {}
+        end
+
+        db.transaction
+        begin
+          # Stop the task
+          Model::Task.stop db, task_id
+
+          # Change status
+          if opts[:mark]
+            new_status = opts[:mark]
+            Model::Task.set_status db, task_id, new_status
+          end
+
+          # Save LRT
+          Model::LastReferencedTasks.put db, task_id
+        rescue
+          db.rollback
+          raise
+        else
+          db.commit
+        end
+      end
     end
 
     def refs( argv )

@@ -16,7 +16,8 @@ Syntax
 
 'add' syntax:
 
-    $ mld add <task-name> [-t <tag-list>] [-m <status>] [-S|--start]
+    $ mld add <task-name> [-t|--tag <tag-list>] [-m|--mark <status>]
+        [-S|--start] [-f|--force]
 
 'list' syntax:
 
@@ -29,6 +30,10 @@ Syntax
 'start' syntax:
 
     $ mdl start <task-ref>
+
+'stop' syntax:
+
+    $ mdl stop --all|<task-ref> [-m|--mark <status>]
 
 'stop' syntax:
 
