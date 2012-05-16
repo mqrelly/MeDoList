@@ -95,7 +95,16 @@ module MeDoList
       task_id = db.last_insert_row_id
 
       # Tag new task
-      # TODO
+      if options[:tag]
+        # Process tag-list argument
+        tag_names = options[:tag]
+        tag_ids = tag_names.map {|tn| Model::Tag.get_or_create db, tn}
+
+        # Add tags to the task
+        tag_ids.each do |tag_id|
+          Model::Tag.tag_task db, task_id, tag_id
+        end
+      end
 
       # Mark new task
       if options[:mark]
@@ -104,7 +113,9 @@ module MeDoList
       end
 
       # Start new task
-      # TODO
+      if options[:start]
+        Model::Task.start db, task_id
+      end
 
       # Save LRT
       Model::LastReferencedTasks.put db, task_id

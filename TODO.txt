@@ -4,3 +4,4 @@ MeDoList ToDo
 - Make 'list' cmd use a template system for outputting tasks.
 - Before operations check if task's status permits it.
 - Only keep a max number of LRTs in db.
+- Implement silent/verbose/default output everywhere.
