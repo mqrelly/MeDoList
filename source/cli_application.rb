@@ -292,8 +292,9 @@ EOF
 
     def version( argv )
       puts "mdl - MeDoList CLI Client in Ruby  #{$MDL_VERSION}"
-      puts "  Copyright by Márk Szabadkai (mqrelly@gmail.com)"
-      # TODO: add license info, add github link
+      puts "Copyright by Márk Szabadkai (mqrelly@gmail.com)"
+      puts "Homepage: http://github.com/mqrelly/MeDoList"
+      # TODO: add license info
     end
   end
 

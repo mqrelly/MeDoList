@@ -5,3 +5,4 @@ MeDoList ToDo
 - Before operations check if task's status permits it.
 - Only keep a max number of LRTs in db.
 - Implement silent/verbose/default output everywhere.
+- Make dry-run mode for every operation.
