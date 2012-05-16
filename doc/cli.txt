@@ -2,12 +2,16 @@ CLI syntax
 ==========
 
 Basic operations:
+- Filter and list tasks
 - Add task
 - Start task
 - Stop task
 - Tag task
 - Change task status (suspend,resume,done,cancel)
-- Filter and list tasks
+
+
+Syntax
+------
 
 'add' syntax:
 
@@ -21,4 +25,17 @@ Basic operations:
 
     $ mdl tag <task-ref> <tag-list>
 
+'start' syntax:
+
+    $ mdl start <task-ref>
+
+'stop' syntax:
+
+    $ mdl stop <task-ref>|--all
+
+
+Definitions
+-----------
+
+<tag-list>:= <tag-name>[,<tag-name>]*
 <task-ref>:= #<task-id>|<task-name>|#<last-referenced-number>

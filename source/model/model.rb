@@ -4,6 +4,7 @@ $MDL_SCHEMA_VERSION = "1"
 
 require "sqlite3"
 require File.join $MDL_ROOT, "model", "tag.rb"
+require File.join $MDL_ROOT, "model", "task.rb"
 
 
 module MeDoList
@@ -35,8 +36,14 @@ SQL
             id integer not null primary key autoincrement,
             name text not null,
             status int not null default 0,
-            last_changed datetime not null,
-            deadline datetime)
+            last_changed integer not null,
+            running_slice_id integer,
+            deadline integer)
+SQL
+        db.execute <<-SQL
+          create table last_ref_tasks (
+            place integer not null primary key,
+            task_id integer not null)
 SQL
         db.execute <<-SQL
           create table tasks_and_tags (
@@ -85,29 +92,6 @@ SQL
       when "canceled" then 3
       else raise ArgumentError, "Invalid status name '#{status}'."
       end
-    end
-
-    def self.lookup_task_ref( db, task_ref )
-      case task_ref
-      when /#\d+/
-        task_id = task_ref[1..task_ref.length-1].to_i
-        task_count_with_id = db.get_first_value "select count(id) from tasks where id=#{task_id}"
-        raise "Task ##{task_id} not found." if task_count_with_id == 0
-
-      when /~\d*/
-        # TODO
-
-      else
-        # TODO: sanitize task_ref before!
-        task_cnt_with_name = db.get_first_value "select count(id) from tasks where name='#{task_ref}'"
-        if task_cnt_with_name == 0
-          raise "Task '#{task_ref}' not found."
-        elsif task_cnt_with_name > 1
-          raise "More then one task are called '#{task_ref}'."
-        end
-        task_id = db.get_first_value "select id from tasks where name='#{task_ref}'"
-      end
-      task_id
     end
   end
 end

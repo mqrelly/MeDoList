@@ -12,7 +12,6 @@ module MeDoList
       app.send cmd, argv
     end
 
-
     def initialize( argv )
       @globals = global_opts = ArgsParser.new do
         option :verbose, /^-v|--verbose$/
@@ -32,11 +31,19 @@ module MeDoList
       db = Model.open $MDL_FILE
       res = db.execute "select id,name,status from tasks"
       res.each do |row|
-        puts "\##{row[0].to_s.ljust 6} #{row[1]} #{Model.status_name row[2]}"
-        tag_ids = db.execute "select tag_id from tasks_and_tags where task_id=#{row[0]}"
+        task_id = row[0]
+        puts "\##{task_id.to_s.ljust 6} #{row[1]} #{Model.status_name row[2]}"
+        tag_ids = db.execute "select tag_id from tasks_and_tags where task_id=#{task_id}"
         tag_ids.each do |tag_row|
           tag_name = db.get_first_value "select name from tags where id=#{tag_row[0]}"
           puts "  #{tag_name}"
+        end
+
+        running_slice_id = Model::Task.get_running_slice_id db, task_id
+        if running_slice_id
+          start_time = db.get_first_value "select start from timeslices"<<
+            " where id=#{running_slice_id}"
+          puts "  Running since #{Time.at start_time}"
         end
       end
     end
@@ -106,7 +113,7 @@ SQL
         # Process task-reference
         raise "Missing <task-ref> argument!" unless argv.size > 0
         task_ref = argv.shift.strip
-        task_id = Model.lookup_task_ref db, task_ref
+        task_id = Model::Task.lookup_task_ref db, task_ref
 
         # Process tag-list argument
         raise "Missing <tag-list> argument!" unless argv.size > 0
@@ -120,6 +127,20 @@ SQL
         tag_ids.each do |tag_id|
           Model::Tag.tag_task db, task_id, tag_id
         end
+      end
+    end
+
+    def start( argv )
+      db = Model.open $MDL_FILE
+
+      # Parse <task-ref>
+      raise "Missing <task-ref> argument!" if argv.size == 0
+      task_ref = argv.shift
+      task_id = Model::Task.lookup_task_ref db, task_ref
+
+      # Start task
+      db.transaction do |db|
+        Model::Task.start db, task_id
       end
     end
 
