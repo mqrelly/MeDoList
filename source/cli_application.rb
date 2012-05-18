@@ -28,23 +28,70 @@ module MeDoList
     end
 
     def list( argv )
-      db = Model.open $MDL_FILE
-      res = db.execute "select id,name,status from tasks"
-      res.each do |row|
-        task_id = row[0]
-        puts "\##{task_id.to_s.ljust 6} #{row[1]} #{Model.status_name row[2]}"
-        tag_ids = db.execute "select tag_id from tasks_and_tags where task_id=#{task_id}"
-        tag_ids.each do |tag_row|
-          tag_name = db.get_first_value "select name from tags where id=#{tag_row[0]}"
-          puts "  #{tag_name}"
-        end
+      # Process arguments
+      if argv.size > 0
+        options = ArgsParser.new do
+          option :format, /^--format$/ do |args|
+            args.shift
+            raise "Missing <list-format> option." if args.size < 1
 
-        running_slice_id = Model::Task.get_running_slice_id db, task_id
-        if running_slice_id
-          start_time = db.get_first_value "select start from timeslices"<<
-            " where id=#{running_slice_id}"
-          puts "  Running since #{Time.at start_time}"
+            format = args.first.strip
+            unless %w(oneline detailed).include? format
+              raise "List format '#{format}' not recognized."
+            end
+            format
+          end
+
+        end.parse argv
+      else
+        options = {}
+      end
+
+      # Set default format to 'oneline'
+      format = options[:format] || "oneline"
+
+      db = Model.open $MDL_FILE
+      res = db.execute "select id,name,status,running_slice_id from tasks"
+      if format == "oneline"
+        res.each do |row|
+          task_id = row[0]
+          name = row[1]
+          status_code = row[2]
+          running_slice_id = row[3]
+
+          status_sym = if running_slice_id
+            "%"
+          else
+            case status_code
+            when 0 then " "
+            when 1 then "S"
+            when 2 then "+"
+            when 3 then "-"
+            end
+          end
+
+          total_time = Model::Task.get_total_time db, task_id
+          total_time_str = Model::TimeSpan.new(total_time).to_s
+
+          if running_slice_id
+            running_time = Model::Task.get_running_time db, task_id
+            running_time_str = Model::TimeSpan.new(running_time).to_s
+            running_time_str << "/"
+          else
+            running_time_str = ""
+          end
+
+          name_width = 78-10-running_time_str.length-total_time_str.length
+          if name.length > name_width
+            name = name[0,name_width-3] << "..."
+          else
+            name = name.ljust name_width
+          end
+
+          puts "#{status_sym} \##{task_id.to_s.ljust 6} #{name} #{running_time_str}#{total_time_str}"
         end
+      else # detailed
+        puts "TODO"
       end
     end
 

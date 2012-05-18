@@ -1,0 +1,30 @@
+
+task property providers
+- id
+- last_changed          <datetime>
+- running_indicator     +
+- status_name           active,suspended,done,canceled
+- status_letter         ' '-DX
+- running_sice
+- running_time
+- total_time
+- first_run
+
+
+oneline
+
+_ #<id>__ <task-name>_____________ __:__/__:__
+
+
+Mechanics
+---------
+
+- task properties into OpenStruct
+- template in pure ruby OR erb
+- eval / erb-filter with properties bound to it
+
+OR
+
+- string template with keywords
+- substitute keywords with data
+- only calculate data, which needed

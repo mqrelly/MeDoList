@@ -95,6 +95,29 @@ module MeDoList
         raise "Failed to update task.last_changed." if db.changes != 1
         true
       end
+
+      def self.get_running_time( db, task_id )
+        running_slice_id = get_running_slice_id db, task_id
+        return nil if running_slice_id.nil?
+
+        start_time = db.get_first_value "select start from timeslices"<<
+          " where id=#{running_slice_id}"
+        now = Time.now.to_i
+
+        now - start_time
+      end
+
+      def self.get_total_time( db, task_id )
+        res = db.execute "select (stop-start),start from timeslices"<<
+          " where task_id=#{task_id}"
+        total_time = 0
+        now = Time.now.to_i
+        res.each do |row|
+          time = row[0] ? row[0] : now - row[1]
+          total_time += time
+        end
+        total_time
+      end
     end
 
   end

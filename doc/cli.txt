@@ -21,7 +21,8 @@ Syntax
 
 'list' syntax:
 
-    $ mdl list [--format <list-format>]
+    $ mdl list [--format <list-format>] [--include|-I <filter>]
+        [--exclude|-X <filter>]
 
 'tag' syntax:
 
@@ -54,4 +55,11 @@ Definitions
 <tag-list> := <tag-name>[,<tag-name>]*
 <task-ref> := (#|^)<task-id>|<task-name>|(#|^)~<last-ref-number>
 <status> := active|suspended|done|canceled
-<list-format> := normal|oneline|detailed
+<list-format> := oneline|detailed
+<filter> :=
+    name <name-pattern>|
+    running|<status>|
+    tag <tag-list>|
+    last-changed <time-ref>|
+    deadline <time-ref>|
+    last-referenced <number>|
