@@ -22,7 +22,7 @@ Syntax
 'list' syntax:
 
     $ mdl list [--format <list-format>] [--include|-I <filter>]
-        [--exclude|-X <filter>]
+        [--exclude|-X <filter>] [--filter|-F <filter>]
 
 'tag' syntax:
 
@@ -57,8 +57,10 @@ Definitions
 <status> := active|suspended|done|canceled
 <list-format> := oneline|detailed
 <filter> :=
+    all|
     name <name-pattern>|
-    running|<status>|
+    running|
+    <status>|
     tag <tag-list>|
     last-changed <time-ref>|
     deadline <time-ref>|

@@ -1,10 +1,12 @@
 MeDoList ToDo
 =============
 
-- Add filters to 'list' cmd.
 - Before operations check if task's status permits it.
+- Add deadline handling.
 - Only keep a max number of LRTs in db.
 - Implement silent/verbose/default output everywhere.
 - Make dry-run mode for every operation.
 - Finish 'help' text.
 - Make 'list' cmd use a template system for outputting tasks.
+- Add default 'status' cmd to quickly list running tasks.
+- Add aliasing capabilities.

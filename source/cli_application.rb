@@ -27,9 +27,40 @@ module MeDoList
       exit 1
     end
 
+    def process_filter_args( filters, action, args )
+      args.shift
+      raise "Missing filter argument." if args.size < 1
+
+      case args.first
+      when "all"
+        filters << [action, :all]
+
+      when "name"
+        args.shift
+        raise "Missing <name-pattern> argument." if args.size < 1
+        filters << [action, :name, args.first]
+
+      when "running"
+        filters << [action, :running]
+
+      when /active|suspended|done|canceled/
+        filters << [action, :status, Model.status_code(args.first)]
+
+      when "tag"
+        args.shift
+        raise "Missing <tag-list> argument." if args.size < 1
+        filters << [action, :tag, Model::Tag.list_to_names(args.first)]
+
+      else
+        raise "Filter argument '#{args.first}' not recognized."
+      end
+    end
+
     def list( argv )
       # Process arguments
+      filters = []
       if argv.size > 0
+        cli = self
         options = ArgsParser.new do
           option :format, /^--format$/ do |args|
             args.shift
@@ -42,6 +73,17 @@ module MeDoList
             format
           end
 
+          option :include, /^--include|-I$/ do |args|
+            cli.process_filter_args filters, :include, args
+          end
+
+          option :exclude, /^--exclude|-X$/ do |args|
+            cli.process_filter_args filters, :exclude, args
+          end
+
+          option :filter, /^--filter|-F$/ do |args|
+            cli.process_filter_args filters, :filter, args
+          end
         end.parse argv
       else
         options = {}
@@ -50,8 +92,46 @@ module MeDoList
       # Set default format to 'oneline'
       format = options[:format] || "oneline"
 
+      # Query task infos
       db = Model.open $MDL_FILE
-      res = db.execute "select id,name,status,running_slice_id from tasks"
+      q = "1==1"
+      filters.each do |filter|
+        case filter[0]
+        when :include then q << "\nOR ("
+        when :exclude then q = "(#{q})\nAND NOT ("
+        when :filter then q << "\nAND ("
+        else raise "Don't know how to do #{filter[0].inspect}!"
+        end
+
+        case filter[1]
+        when :all
+          q << "1==1"
+          
+        when :name
+          q << "name like #{filter[2]}"
+
+        when :running
+          q << "running_slice_id not null"
+
+        when :status
+          q << "status = #{filter[2]}"
+
+        when :tag
+          tag_ids = Model::Tag.names_to_ids db, filter[2]
+          q << tag_ids.map do |tag_id|
+            "(id in (select task_id from tasks_and_tags "<<
+            "where tag_id=#{tag_id}))"
+          end.join(" AND ")
+
+        else
+          raise "Don't know how to do #{filter[1].inspect}!"
+        end
+
+        q << ")"
+      end
+
+      res = db.execute "select id,name,status,running_slice_id from tasks where #{q}"
+
       if format == "oneline"
         res.each do |row|
           task_id = row[0]
