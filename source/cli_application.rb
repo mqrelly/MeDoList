@@ -94,43 +94,7 @@ module MeDoList
 
       # Query task infos
       db = Model.open $MDL_FILE
-      q = "1==1"
-      filters.each do |filter|
-        case filter[0]
-        when :include then q << "\nOR ("
-        when :exclude then q = "(#{q})\nAND NOT ("
-        when :filter then q << "\nAND ("
-        else raise "Don't know how to do #{filter[0].inspect}!"
-        end
-
-        case filter[1]
-        when :all
-          q << "1==1"
-          
-        when :name
-          q << "name like #{filter[2]}"
-
-        when :running
-          q << "running_slice_id not null"
-
-        when :status
-          q << "status = #{filter[2]}"
-
-        when :tag
-          tag_ids = Model::Tag.names_to_ids db, filter[2]
-          q << tag_ids.map do |tag_id|
-            "(id in (select task_id from tasks_and_tags "<<
-            "where tag_id=#{tag_id}))"
-          end.join(" AND ")
-
-        else
-          raise "Don't know how to do #{filter[1].inspect}!"
-        end
-
-        q << ")"
-      end
-
-      res = db.execute "select id,name,status,running_slice_id from tasks where #{q}"
+      res = Model::Task.list db, filters
 
       if format == "oneline"
         res.each do |row|

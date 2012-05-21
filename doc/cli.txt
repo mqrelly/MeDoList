@@ -8,11 +8,10 @@ Basic operations:
 - Stop task
 - Tag task
 - Change task status (suspend,resume,done,cancel)
-- Show last-referenced-tasks
 
 
-Syntax
-------
+Operations by subcommand
+------------------------
 
 'add' syntax:
 
@@ -62,6 +61,8 @@ Definitions
     running|
     <status>|
     tag <tag-list>|
-    last-changed <time-ref>|
-    deadline <time-ref>|
+    last-changed <time-intervall>|
+    deadline <time-intervall>|
     last-referenced <number>|
+<time-ref> := TODO
+<time-intervall> := TODO
