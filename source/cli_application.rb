@@ -27,32 +27,6 @@ module MeDoList
       exit 1
     end
 
-    def process_filter_args( filters, action, args )
-      raise "Missing filter argument." if args.size < 1
-      filter = args.shift
-      case filter
-      when "all"
-        filters << [action, :all]
-
-      when "name"
-        raise "Missing <name-pattern> argument." if args.size < 1
-        filters << [action, :name, args.shift]
-
-      when "running"
-        filters << [action, :running]
-
-      when /active|suspended|done|canceled/
-        filters << [action, :status, Model.status_code(filter)]
-
-      when "tag"
-        raise "Missing <tag-list> argument." if args.size < 1
-        filters << [action, :tag, Model::Tag.list_to_names(args.shift)]
-
-      else
-        raise "Filter argument '#{filter}' not recognized."
-      end
-    end
-
     def list( argv )
       # Process arguments
       filters = []
@@ -71,17 +45,17 @@ module MeDoList
 
           option :include, /^--include|-I$/ do |args|
             args.shift
-            cli.process_filter_args filters, :include, args
+            filters << Model::Task.process_filter_args(:include, args)
           end
 
           option :exclude, /^--exclude|-X$/ do |args|
             args.shift
-            cli.process_filter_args filters, :exclude, args
+            filters << Model::Task.process_filter_args(:exclude, args)
           end
 
           option :filter, /^--filter|-F$/ do |args|
             args.shift
-            cli.process_filter_args filters, :filter, args
+            filters << Model::Task.process_filter_args(:filter, args)
           end
         end.parse argv
       else

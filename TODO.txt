@@ -4,7 +4,6 @@ MeDoList ToDo
 - Add UnitTests
 
 - Handle user config in ~/.mdl/config
-- Rework filters with Hashes instead of Arrays.
 - Add 'detailed' list format.
 - Before operations check if task's status permits it.
 - Add deadline handling.

@@ -119,66 +119,76 @@ module MeDoList
         total_time
       end
 
-      def self.process_filter_args( args )
+      def self.process_filter_args( action, args )
         raise "Missing filter argument." if args.size < 1
-
-        case args.first
+        filter = args.shift
+        case filter
         when "all"
-          [:all]
+          {:action => action, :filter => :all}
 
         when "name"
-          args.shift
           raise "Missing <name-pattern> argument." if args.size < 1
-          [:name, args.first]
+          {
+            :action => action, 
+            :filter => :name, 
+            :pattern => args.shift
+          }
 
         when "running"
-          [:running]
+          {:action => action, :filter => :running}
 
         when /active|suspended|done|canceled/
-          [:status, Model.status_code(args.first)]
+          {
+            :action => action, 
+            :filter => :status, 
+            :status => Model.status_code(args.shift)
+          }
 
         when "tag"
-          args.shift
           raise "Missing <tag-list> argument." if args.size < 1
-          [:tag, Model::Tag.list_to_names(args.first)]
+          {
+            :action => action,
+            :filter => :tag,
+            :tags => Model::Tag.list_to_names(args.shift)
+          }
 
         else
-          raise "Filter argument '#{args.first}' not recognized."
+          raise "Filter argument '#{filter}' not recognized."
         end
       end
 
       def self.list( db, filters )
         q = "1==1"
-        filters.each do |filter|
-          case filter[0]
+        filters.each do |f|
+          case f[:action]
           when :include then q << "\nOR ("
           when :exclude then q = "(#{q})\nAND NOT ("
           when :filter then q = "(#{q})\nAND ("
           else raise "Don't know how to do #{filter[0].inspect}!"
           end
 
-          case filter[1]
+          case filter[:filter]
           when :all
             q << "1==1"
 
           when :name
-            q << "name like #{filter[2]}"
+            q << "name like #{filter[:pattern]}"
 
           when :running
             q << "running_slice_id not null"
 
           when :status
-            q << "status = #{filter[2]}"
+            q << "status = #{filter[:status]}"
 
           when :tag
-            tag_ids = Model::Tag.names_to_ids db, filter[2]
+            tag_ids = Model::Tag.names_to_ids db, filter[:tags]
             q << tag_ids.map do |tag_id|
               "(id in (select task_id from tasks_and_tags "<<
               "where tag_id=#{tag_id}))"
             end.join(" AND ")
 
           else
-            raise "Don't know how to do #{filter[1].inspect}!"
+            raise "Don't know how to do #{filter[:filter].inspect}!"
           end
 
           q << ")"
