@@ -13,37 +13,41 @@ Basic operations:
 Operations by subcommand
 ------------------------
 
-'add' syntax:
-
-    $ mld add <task-name> [-t|--tag <tag-list>] [-m|--mark <status>]
-        [-S|--start] [-f|--force]
-
-'list' syntax:
+'list'
 
     $ mdl list [--format <list-format>] [--include|-I <filter>]
         [--exclude|-X <filter>] [--filter|-F <filter>]
 
-'tag' syntax:
+'add'
+
+    $ mld add <task-name> [-t|--tag <tag-list>] [-m|--mark <status>]
+        [-S|--start] [-f|--force] [-d|--deadline <time-ref>]
+
+'tag'
 
     $ mdl tag <task-ref> <tag-list>
 
-'start' syntax:
+'start'
 
     $ mdl start <task-ref>
 
-'stop' syntax:
+'stop'
 
     $ mdl stop --all|<task-ref> [-m|--mark <status>]
 
-'stop' syntax:
+'stop'
 
     $ mdl stop <task-ref>|--all
 
-'mark' syntax:
+'mark'
 
     $ mdl mark <task-ref> <status>
 
-'refs' syntax:
+'deadline'
+
+    $ mdl deadline <task-ref> <time-ref>|none
+
+'refs'
 
     $ mdl refs [--limit|-l <max-size>]
 
@@ -65,4 +69,7 @@ Definitions
     deadline <time-intervall>|
     last-referenced <number>|
 <time-ref> := TODO
-<time-intervall> := TODO
+<time-intervall> := 
+    before <time-ref>|
+    after <time-ref>|
+    <time-ref>..<time-ref>

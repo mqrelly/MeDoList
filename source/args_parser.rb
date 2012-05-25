@@ -17,8 +17,7 @@ class ArgsParser
       :filter => filter,
     }
   end
-
-  def stop_on( *words )
+def stop_on( *words )
     @stop_on = words
   end
 
@@ -42,9 +41,12 @@ class ArgsParser
           next unless opt[:pattern] =~ arg
         end
 
-        options[opt[:id]] = opt[:filter].nil? ||
-          opt[:filter].call(args)
-        args.shift
+        if opt[:filter]
+          options[opt[:id]] = opt[:filter].call(args)
+        else
+          options[opt[:id]] = true
+          args.shift
+        end
         recognized = true
         break
       end

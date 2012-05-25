@@ -28,31 +28,28 @@ module MeDoList
     end
 
     def process_filter_args( filters, action, args )
-      args.shift
       raise "Missing filter argument." if args.size < 1
-
-      case args.first
+      filter = args.shift
+      case filter
       when "all"
         filters << [action, :all]
 
       when "name"
-        args.shift
         raise "Missing <name-pattern> argument." if args.size < 1
-        filters << [action, :name, args.first]
+        filters << [action, :name, args.shift]
 
       when "running"
         filters << [action, :running]
 
       when /active|suspended|done|canceled/
-        filters << [action, :status, Model.status_code(args.first)]
+        filters << [action, :status, Model.status_code(filter)]
 
       when "tag"
-        args.shift
         raise "Missing <tag-list> argument." if args.size < 1
-        filters << [action, :tag, Model::Tag.list_to_names(args.first)]
+        filters << [action, :tag, Model::Tag.list_to_names(args.shift)]
 
       else
-        raise "Filter argument '#{args.first}' not recognized."
+        raise "Filter argument '#{filter}' not recognized."
       end
     end
 
@@ -65,8 +62,7 @@ module MeDoList
           option :format, /^--format$/ do |args|
             args.shift
             raise "Missing <list-format> option." if args.size < 1
-
-            format = args.first.strip
+            format = args.shift.strip
             unless %w(oneline detailed).include? format
               raise "List format '#{format}' not recognized."
             end
@@ -74,14 +70,17 @@ module MeDoList
           end
 
           option :include, /^--include|-I$/ do |args|
+            args.shift
             cli.process_filter_args filters, :include, args
           end
 
           option :exclude, /^--exclude|-X$/ do |args|
+            args.shift
             cli.process_filter_args filters, :exclude, args
           end
 
           option :filter, /^--filter|-F$/ do |args|
+            args.shift
             cli.process_filter_args filters, :filter, args
           end
         end.parse argv
@@ -151,13 +150,13 @@ module MeDoList
         option :tag, /^-t|--tag$/ do |args|
           args.shift
           raise "Missing <tag-list> for --tag option!" if args.size < 1
-          args.first.split(",").map{|t| t.strip}
+          args.shift.split(",").map{|t| t.strip}
         end
 
         option :mark, /^-m|--mark$/ do |args|
           args.shift
           raise "Missing status for --mark option!" if args.size < 1
-          Model::status_code args.first.strip
+          Model::status_code args.shift.strip
         end
 
         option :force, /^-f|--force$/
@@ -301,7 +300,7 @@ module MeDoList
             option :mark, /^-m|--mark$/ do |args|
               args.shift
               raise "Missing status for --mark option." if args.size < 1
-              Model.status_code args.first
+              Model.status_code args.shift.strip
             end
           end.parse argv
         else
@@ -358,9 +357,9 @@ module MeDoList
       # Process args
       options = ArgsParser.new do
         option :limit, /^--limit|-l$/ do |args|
-          raise "Missing limit number argument." if args.size == 1
           args.shift
-          args.first.to_i
+          raise "Missing limit number argument." if args.size < 1
+          args.shift.to_i
         end
       end.parse argv
 
