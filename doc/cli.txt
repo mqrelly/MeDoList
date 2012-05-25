@@ -72,4 +72,4 @@ Definitions
 <time-intervall> := 
     before <time-ref>|
     after <time-ref>|
-    <time-ref>..<time-ref>
+    in <time-ref> <time-ref>

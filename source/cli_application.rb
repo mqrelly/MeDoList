@@ -17,7 +17,7 @@ module MeDoList
         option :verbose, /^-v|--verbose$/
         option :silent, /^-s|--silent$/
         option :dry_run, /^-n|--dry-run$/
-        stop_on *%w(help version add start stop mark tag list refs)
+        stop_on *%w(help version add start stop mark tag list deadline refs)
       end.parse(argv)
     end
 
@@ -43,19 +43,13 @@ module MeDoList
             format
           end
 
-          option :include, /^--include|-I$/ do |args|
-            args.shift
-            filters << Model::Task.process_filter_args(:include, args)
-          end
-
-          option :exclude, /^--exclude|-X$/ do |args|
-            args.shift
-            filters << Model::Task.process_filter_args(:exclude, args)
-          end
-
-          option :filter, /^--filter|-F$/ do |args|
-            args.shift
-            filters << Model::Task.process_filter_args(:filter, args)
+          option :filter, /^--filter|-F|--include|-I|--exclude|-X$/ do |args|
+            case args.shift
+            when /--filter|-F/ then action = :filter
+            when /--include|-I/ then action = :include
+            when /--exclude|-X/ then action = :exclude
+            end
+            filters << Model::Task.process_filter_args(action, args)
           end
         end.parse argv
       else
@@ -131,6 +125,15 @@ module MeDoList
           args.shift
           raise "Missing status for --mark option!" if args.size < 1
           Model::status_code args.shift.strip
+        end
+
+        option :deadline, /^-d|--deadline$/ do |args|
+          args.shift
+          raise "Missing <time-ref> for --deadline." if args.size < 1
+          time_ref = args.shift
+          deadline = Chronic.parse time_ref
+          raise "Unrecognized <time-ref> '#{time_ref}'." if deadline.nil?
+          deadline
         end
 
         option :force, /^-f|--force$/
@@ -321,6 +324,36 @@ module MeDoList
       db.transaction do |db|
         # Change status
         Model::Task.set_status db, task_id, status_code
+
+        # Save LRT
+        Model::LastReferencedTasks.put db, task_id
+      end
+    end
+
+    def deadline( argv )
+      # Process args
+      raise "Missing <task-ref> argument." if argv.size < 1
+      raise "Missing <time-ref> argument." if argv.size < 2
+      raise "Unknown argument." if argv.size > 2
+
+      db = Model.open $MDL_FILE
+
+      # Lookup referenced task id
+      task_ref = argv.shift.strip
+      task_id = Model::Task.lookup_task_ref db, task_ref
+
+      # Parse new status
+      time_ref = argv.shift.strip
+      if time_ref == "none"
+        deadline = nil
+      else
+        deadline = Chronic.parse time_ref
+        raise "Unrecognized time-ref '#{time_ref}'." if deadline.nil?
+      end
+
+      db.transaction do |db|
+        # Change deadline on task
+        Model::Task.set_deadline db, task_id, deadline
 
         # Save LRT
         Model::LastReferencedTasks.put db, task_id

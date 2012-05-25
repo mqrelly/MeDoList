@@ -119,6 +119,53 @@ module MeDoList
         total_time
       end
 
+      def self.set_deadline( db, task_id, deadline )
+        if deadline.nil?
+          deadline="NULL"
+        else
+          deadline = deadline.to_i
+        end
+
+        db.execute "update tasks set deadline=#{deadline} where id=#{task_id}"
+        raise "Failed to update deadline!" if db.changes == 0
+
+        update_last_changed db, task_id
+      end
+
+      def self.process_time_intervall_args( args )
+        raise "Missing <time-intervall> argument." if args.size < 1
+        type = args.shift.strip
+        case type
+        when /before|after/
+          raise "Missing <time-ref> argument." if args.size < 1
+          time_ref_arg = args.shift
+          time_ref = Chronic.parse time_ref_arg
+          raise "Unrecognized <time-ref> '#{time_ref_arg}'." if time_ref.nil?
+          {
+            :type => type.to_sym,
+            :time_ref => time_ref,
+          }
+
+        when "in"
+          raise "Missing from <time-ref> argument." if args.size < 1
+          raise "Missing to <time-ref> argument." if args.size < 2
+          from_arg = args.shift
+          from_time_ref = Chronic.parse from_arg
+          raise "Unknown <time-ref> '#{from_arg}'." if from_time_ref.nil?
+          to_arg = args.shift
+          to_time_ref = Chronic.parse to_arg
+          raise "Unknown <time-ref> '#{to_arg}'." if to_time_ref.nil?
+          {
+            :type => :in,
+            :from => from_time_ref,
+            :to => to_time_ref,
+          }
+
+        else
+          raise "Unknown time-intervall type '#{type}'."
+        end
+      end
+
       def self.process_filter_args( action, args )
         raise "Missing filter argument." if args.size < 1
         filter = args.shift
@@ -141,7 +188,7 @@ module MeDoList
           {
             :action => action, 
             :filter => :status, 
-            :status => Model.status_code(args.shift)
+            :status => Model.status_code(filter)
           }
 
         when "tag"
@@ -151,6 +198,12 @@ module MeDoList
             :filter => :tag,
             :tags => Model::Tag.list_to_names(args.shift)
           }
+
+        when "deadline"
+          dl = process_time_intervall_args args
+          dl[:action] = action
+          dl[:filter] = :deadline
+          dl
 
         else
           raise "Filter argument '#{filter}' not recognized."
@@ -164,31 +217,47 @@ module MeDoList
           when :include then q << "\nOR ("
           when :exclude then q = "(#{q})\nAND NOT ("
           when :filter then q = "(#{q})\nAND ("
-          else raise "Don't know how to do #{filter[0].inspect}!"
+          else raise "Don't know how to do #{f[:action].inspect}!"
           end
 
-          case filter[:filter]
+          case f[:filter]
           when :all
             q << "1==1"
 
           when :name
-            q << "name like #{filter[:pattern]}"
+            q << "name like #{f[:pattern]}"
 
           when :running
             q << "running_slice_id not null"
 
           when :status
-            q << "status = #{filter[:status]}"
+            q << "status = #{f[:status]}"
 
           when :tag
-            tag_ids = Model::Tag.names_to_ids db, filter[:tags]
+            tag_ids = Model::Tag.names_to_ids db, f[:tags]
             q << tag_ids.map do |tag_id|
               "(id in (select task_id from tasks_and_tags "<<
               "where tag_id=#{tag_id}))"
             end.join(" AND ")
 
+          when :deadline
+            case f[:type]
+            when :before
+              q << "deadline <= #{f[:time_ref].to_i}"
+
+            when :after
+              q << "deadline >= #{f[:time_ref].to_i}"
+
+            when :in
+              q << "(deadline >= #{f[:from].to_i} "<<
+                "and deadline <= #{f[:to].to_i})"
+
+            else
+              raise "Don't know how to do '#{f[:type].inspect}'!"
+            end
+
           else
-            raise "Don't know how to do #{filter[:filter].inspect}!"
+            raise "Don't know how to do #{f[:filter].inspect}!"
           end
 
           q << ")"
