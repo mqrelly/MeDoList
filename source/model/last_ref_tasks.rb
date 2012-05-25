@@ -19,6 +19,9 @@ module MeDoList
       end
 
       def self.put( db, task_id )
+        # Don't do anything if the last refd didn't change.
+        return if task_id == get(db,1)
+
         # Increment ref_nums
         max_ref_num = get_max_ref_num db
         if max_ref_num

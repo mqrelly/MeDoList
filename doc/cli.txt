@@ -56,7 +56,10 @@ Definitions
 -----------
 
 <tag-list> := <tag-name>[,<tag-name>]*
-<task-ref> := (#|^)<task-id>|<task-name>|(#|^)~<last-ref-number>
+<task-ref> := 
+    (#|^)<task-id>|
+    <task-name>|
+    (#|^)~<last-ref-number>
 <status> := active|suspended|done|canceled
 <list-format> := oneline|detailed
 <filter> :=

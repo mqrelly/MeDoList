@@ -200,10 +200,25 @@ module MeDoList
           }
 
         when "deadline"
-          dl = process_time_intervall_args args
-          dl[:action] = action
-          dl[:filter] = :deadline
-          dl
+          flt = process_time_intervall_args args
+          flt[:action] = action
+          flt[:filter] = :deadline
+          flt
+
+        when "last-changed"
+          flt = process_time_intervall_args args
+          flt[:action] = action
+          flt[:filter] = :changed
+          flt
+
+        when "last-referenced"
+          raise "Missing <max-ref-number> argument." if args.size < 1
+          max_ref_num = Integer(args.shift.strip)
+          {
+            :action => action,
+            :filter => :last_referenced,
+            :max_ref_num => max_ref_num,
+          }
 
         else
           raise "Filter argument '#{filter}' not recognized."
@@ -255,6 +270,31 @@ module MeDoList
             else
               raise "Don't know how to do '#{f[:type].inspect}'!"
             end
+
+          when :changed
+            case f[:type]
+            when :before
+              q << "last_changed <= #{f[:time_ref].to_i}"
+
+            when :after
+              q << "last_changed >= #{f[:time_ref].to_i}"
+
+            when :in
+              q << "(last_changed >= #{f[:from].to_i} "<<
+                "and last_changed <= #{f[:to].to_i})"
+
+            else
+              raise "Don't know how to do '#{f[:type].inspect}'!"
+            end
+
+          when :last_referenced
+            task_ids = []
+            res = db.execute "select task_id from last_ref_tasks"<<
+              " where ref_num <= #{f[:max_ref_num]}"
+            res.each do |row|
+              task_ids << row[0]
+            end
+            q << "id in (#{task_ids.uniq.join ","})"
 
           else
             raise "Don't know how to do #{f[:filter].inspect}!"
