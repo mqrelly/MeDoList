@@ -211,6 +211,12 @@ module MeDoList
           flt[:filter] = :changed
           flt
 
+        when "activity"
+          flt = process_time_intervall_args args
+          flt[:action] = action
+          flt[:filter] = :activity
+          flt
+
         when "last-referenced"
           raise "Missing <max-ref-number> argument." if args.size < 1
           max_ref_num = Integer(args.shift.strip)
@@ -227,6 +233,7 @@ module MeDoList
 
       def self.list( db, filters )
         q = "1==1"
+        now = Time.now.utc
         filters.each do |f|
           case f[:action]
           when :include then q << "\nOR ("
@@ -271,6 +278,32 @@ module MeDoList
               raise "Don't know how to do '#{f[:type].inspect}'!"
             end
 
+          when :activity
+            subq = "select distinct task_id from timeslices where "
+            case f[:type]
+            when :before
+              subq << "start <= #{f[:time_ref].to_i}"
+
+            when :after
+              subq << "(stop >= #{f[:time_ref].to_i}) "<<
+                "or (stop is null and #{now.to_i} >= #{f[:time_ref].to_i})"
+
+            when :in
+              subq << "((stop is null and #{now.to_i} >= #{f[:from].to_i} or "<<
+                "stop >= #{f[:from].to_i}) "<<
+                "and start <= #{f[:to].to_i})"
+
+            else
+              raise "Don't know how to do '#{f[:type].inspect}'!"
+            end
+            task_ids = []
+            res = db.execute subq
+            res.each do |row|
+              task_ids << row[0]
+            end
+            q << "id in (#{task_ids.join ","})"
+
+
           when :changed
             case f[:type]
             when :before
@@ -289,12 +322,12 @@ module MeDoList
 
           when :last_referenced
             task_ids = []
-            res = db.execute "select task_id from last_ref_tasks"<<
+            res = db.execute "select distinct task_id from last_ref_tasks"<<
               " where ref_num <= #{f[:max_ref_num]}"
             res.each do |row|
               task_ids << row[0]
             end
-            q << "id in (#{task_ids.uniq.join ","})"
+            q << "id in (#{task_ids.join ","})"
 
           else
             raise "Don't know how to do #{f[:filter].inspect}!"

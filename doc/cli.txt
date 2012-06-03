@@ -68,10 +68,11 @@ Definitions
     running|
     <status>|
     tag <tag-list>|
+    activity <time-intervall>|
     last-changed <time-intervall>|
     deadline <time-intervall>|
     last-referenced <number>|
-<time-ref> := TODO
+<time-ref> := <use chronic gem for time parsing>
 <time-intervall> := 
     before <time-ref>|
     after <time-ref>|
