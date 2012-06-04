@@ -1,7 +1,6 @@
 MeDoList ToDo
 =============
 
-- Handle user config in ~/.mdl/config
 - Make 'list' cmd use a template system for outputting tasks.
 - Before operations check if task's status permits it.
 - Only keep a max number of LRTs in db.
@@ -10,7 +9,7 @@ MeDoList ToDo
 - Finish 'help' text.
 - Add aliasing capabilities.
 - Add default 'status' cmd to quickly list running tasks.
+- Clean-up configuration handling (global,user,local).
 
-- Use Bundler for gem handling.
 - Add UnitTests
 - Write Rakefile for automating install and tests

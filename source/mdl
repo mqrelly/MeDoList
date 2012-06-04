@@ -8,6 +8,7 @@ $MDL_USER_DIR = File.expand_path "~/.mdl"
 $MDL_DB_FILE = File.join $MDL_USER_DIR, "main.db"
 
 require "rubygems"
+require "bundler/setup"
 require File.join $MDL_BIN, "model", "model.rb"
 require File.join $MDL_BIN, "user_config.rb"
 require File.join $MDL_BIN, "cli_application.rb"
