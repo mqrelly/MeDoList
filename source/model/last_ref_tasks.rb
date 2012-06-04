@@ -18,9 +18,14 @@ module MeDoList
           " where ref_num>#{limit}"
       end
 
-      def self.put( db, task_id )
+      def self.put( db, task_id, max_num=nil )
         # Don't do anything if the last refd didn't change.
         return if task_id == get(db,1)
+
+        # Only keep the last 'max_num' references.
+        if max_num
+          db.execute "delete from last_ref_tasks where ref_num >= #{max_num}"
+        end
 
         # Increment ref_nums
         max_ref_num = get_max_ref_num db

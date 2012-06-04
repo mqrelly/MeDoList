@@ -1,24 +1,31 @@
 # encoding: utf-8
-
-require File.join $MDL_ROOT, "args_parser.rb"
-
+require File.join $MDL_BIN, "args_parser.rb"
 
 module MeDoList
 
   class CliApplication
-    def self.run( argv )
-      app = self.new(argv)
+    def self.run( user_config, argv )
+      app = self.new(user_config, argv)
       cmd = argv.shift || :missing_command
       app.send cmd, argv
     end
 
-    def initialize( argv )
+    def initialize( user_config, argv )
+      @usr_cfg = user_config
       @globals = ArgsParser.new do
         option :verbose, /^-v|--verbose$/
         option :silent, /^-s|--silent$/
         option :dry_run, /^-n|--dry-run$/
+        option :db_file, /^--db-file$/ do |args|
+          args.shift
+          raise "Missing <db-file> argument." if args.size < 1
+          args.shift
+        end
+
         stop_on *%w(help version add start stop mark tag list deadline refs)
       end.parse(argv)
+
+      $MDL_DB_FILE = @globals[:db_file] if @globals[:db_file]
     end
 
     def missing_command( argv )
@@ -60,7 +67,7 @@ module MeDoList
       format = options[:format] || "oneline"
 
       # Query task infos
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
       res = Model::Task.list db, filters
 
       if format == "oneline"
@@ -140,7 +147,7 @@ module MeDoList
       end.parse(argv)
 
       # Open database
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
       db.transaction
 
       # Check for same named tasks
@@ -185,7 +192,7 @@ module MeDoList
       end
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id
+      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -194,7 +201,7 @@ module MeDoList
     end
 
     def tag( argv )
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
       db.transaction
 
       # Process task-reference
@@ -216,7 +223,7 @@ module MeDoList
       end
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id
+      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -225,7 +232,7 @@ module MeDoList
     end
 
     def start( argv )
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
       db.transaction
 
       # Parse <task-ref>
@@ -237,7 +244,7 @@ module MeDoList
       Model::Task.start db, task_id
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id
+      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -251,7 +258,7 @@ module MeDoList
 
       if task_ref == "--all"
         # Stop all runnung tasks
-        db = Model.open $MDL_FILE
+        db = Model.open $MDL_DB_FILE
         db.transaction do |db|
           # Get all the running tasks
           task_ids = []
@@ -267,7 +274,7 @@ module MeDoList
         end
       else
         # Stop only the given one
-        db = Model.open $MDL_FILE
+        db = Model.open $MDL_DB_FILE
 
         # Parse task_ref
         task_id = Model::Task.lookup_task_ref db, task_ref
@@ -295,7 +302,7 @@ module MeDoList
           end
 
           # Save LRT
-          Model::LastReferencedTasks.put db, task_id
+          Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
         end
       end
     end
@@ -306,7 +313,7 @@ module MeDoList
       raise "Missing <status> argument." if argv.size < 2
       raise "Unknown argument." if argv.size > 2
 
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
 
       # Lookup referenced task id
       task_ref = argv.shift.strip
@@ -326,7 +333,7 @@ module MeDoList
         Model::Task.set_status db, task_id, status_code
 
         # Save LRT
-        Model::LastReferencedTasks.put db, task_id
+        Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
       end
     end
 
@@ -336,7 +343,7 @@ module MeDoList
       raise "Missing <time-ref> argument." if argv.size < 2
       raise "Unknown argument." if argv.size > 2
 
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
 
       # Lookup referenced task id
       task_ref = argv.shift.strip
@@ -356,7 +363,7 @@ module MeDoList
         Model::Task.set_deadline db, task_id, deadline
 
         # Save LRT
-        Model::LastReferencedTasks.put db, task_id
+        Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
       end
     end
 
@@ -371,7 +378,7 @@ module MeDoList
       end.parse argv
 
       # List references
-      db = Model.open $MDL_FILE
+      db = Model.open $MDL_DB_FILE
       Model::LastReferencedTasks.list(db,options[:limit]) do |ref_num,task_id|
         puts "~#{ref_num.to_s.ljust 6} ##{task_id}"
       end
