@@ -1,5 +1,6 @@
 # encoding: utf-8
-require File.join $MDL_BIN, "args_parser.rb"
+require File.join $MDL_BIN_DIR, "args_parser.rb"
+require File.join $MDL_BIN_DIR, "template_formatter.rb"
 
 module MeDoList
 
@@ -43,11 +44,7 @@ module MeDoList
           option :format, /^--format$/ do |args|
             args.shift
             raise "Missing <list-format> option." if args.size < 1
-            format = args.shift.strip
-            unless %w(oneline detailed).include? format
-              raise "List format '#{format}' not recognized."
-            end
-            format
+            args.shift.strip
           end
 
           option :filter, /^--filter|-F|--include|-I|--exclude|-X$/ do |args|
@@ -56,7 +53,7 @@ module MeDoList
             when /--include|-I/ then action = :include
             when /--exclude|-X/ then action = :exclude
             end
-            filters << Model::Task.process_filter_args(action, args)
+            filters << Model::TaskList.process_filter_args(action, args)
           end
         end.parse argv
       else
@@ -68,9 +65,11 @@ module MeDoList
 
       # Query task infos
       db = Model.open $MDL_DB_FILE
-      res = Model::Task.list db, filters
+      res = Model::TaskList.list db, filters
 
       if format == "oneline"
+        # Use this built in format.
+
         res.each do |row|
           task_id = row[0]
           name = row[1]
@@ -108,8 +107,10 @@ module MeDoList
 
           puts "#{status_sym} \##{task_id.to_s.ljust 6} #{name} #{running_time_str}#{total_time_str}"
         end
-      else # detailed
-        puts "TODO"
+      else
+        # Use the given template
+        TemplateFormatter.format "list/#{format}", $stdout,
+          Model::TaskList.new(db, res), filters
       end
     end
 
@@ -388,9 +389,21 @@ module MeDoList
       puts <<EOF
 Usage: mdl [-s|--silent|-v|--verbose] [-n|--dry-run] <command> <command-args>
 
-TODO:
-- global options
-- list commands
+Available commands:
+
+  help     - Prints this help message.
+  version  - Prints the version of the program.
+
+  list     - Prints all the filtered tasks formatted by the given template.
+  add      - Adds a new tasks.
+  start    - Starts a task.
+  stop     - Stops one of or all the running tasks.
+  tag      - Attaches the given tags to a task.
+  mark     - Changes a task's status.
+  deadline - Set or delete a deadline for a task.
+  refs     - List last referenced tasks.
+
+TODO: global options
 EOF
     end
 

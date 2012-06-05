@@ -1,15 +1,19 @@
 MeDoList ToDo
 =============
 
-- Make 'list' cmd use a template system for outputting tasks.
+- Clean-up configuration handling (global,user,local).
 - Before operations check if task's status permits it.
+- Add 'id' filter to 'list' cmd.
 - Only keep a max number of LRTs in db.
 - Implement silent/verbose/default output everywhere.
 - Make dry-run mode for every operation.
 - Finish 'help' text.
 - Add aliasing capabilities.
-- Add default 'status' cmd to quickly list running tasks.
-- Clean-up configuration handling (global,user,local).
+- Add buit in 'status' alias to quickly list relevant tasks
+  (running, recently changed, deadline comming)
+- Add 'tag --list' cmd option to list all tags.
+- Add built in 'show' alias to show details of one task.
 
 - Add UnitTests
 - Write Rakefile for automating install and tests
+- Add LICENSE info

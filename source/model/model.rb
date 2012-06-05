@@ -4,10 +4,15 @@ $MDL_SCHEMA_VERSION = "1"
 
 require "sqlite3"
 require "chronic"
-require File.join $MDL_BIN, "model", "time_span.rb"
-require File.join $MDL_BIN, "model", "tag.rb"
-require File.join $MDL_BIN, "model", "task.rb"
-require File.join $MDL_BIN, "model", "last_ref_tasks.rb"
+require File.join $MDL_BIN_DIR, "model", "time_span.rb"
+require File.join $MDL_BIN_DIR, "model", "time_utils.rb"
+require File.join $MDL_BIN_DIR, "model", "tag.rb"
+require File.join $MDL_BIN_DIR, "model", "tag_list.rb"
+require File.join $MDL_BIN_DIR, "model", "task.rb"
+require File.join $MDL_BIN_DIR, "model", "task_list.rb"
+require File.join $MDL_BIN_DIR, "model", "activity.rb"
+require File.join $MDL_BIN_DIR, "model", "activity_list.rb"
+require File.join $MDL_BIN_DIR, "model", "last_ref_tasks.rb"
 
 
 module MeDoList

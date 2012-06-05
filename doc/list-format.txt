@@ -19,12 +19,6 @@ _ #<id>__ <task-name>_____________ __:__/__:__
 Mechanics
 ---------
 
-- task properties into OpenStruct
-- template in pure ruby OR erb
-- eval / erb-filter with properties bound to it
-
-OR
-
-- string template with keywords
-- substitute keywords with data
-- only calculate data, which needed
+- task properties into Task instances
+- template in pure ruby
+- eval

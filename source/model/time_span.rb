@@ -17,11 +17,11 @@ module MeDoList
       end
 
       def sec
-        @secs % 60
+        @secs.to_i % 60
       end
 
       def total_min
-        @secs / 60
+        @secs.to_i / 60
       end
 
       def min
@@ -40,11 +40,17 @@ module MeDoList
         total_hour / 24
       end
 
-      def to_s
-        if total_sec < 60
-          "#{total_sec}s"
+      def to_s( long=false )
+        if total_sec == 0
+          "-"
+        elsif total_sec < 60
+          "#{total_sec.to_i}s"
         else
-          "#{total_hour}:#{min.to_s.rjust 2, "0"}"
+          if long
+            "#{total_hour}:#{min.to_s.rjust 2, "0"}:#{sec.to_s.rjust 2, "0"}"
+          else
+            "#{total_hour}:#{min.to_s.rjust 2, "0"}"
+          end
         end
       end
     end

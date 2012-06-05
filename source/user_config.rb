@@ -9,7 +9,9 @@ module MeDoList
 
     def initialize( user_dir )
       @user_dir = user_dir
-      FileUtils.mkdir_p @user_dir
+      FileUtils.mkdir_p File.join @user_dir, "templates", "list"
+      FileUtils.mkdir_p File.join @user_dir, "templates", "task"
+      FileUtils.mkdir_p File.join @user_dir, "templates", "activity"
       config_file = File.join @user_dir, "confing.yaml"
       if File.exists? config_file
         @conf = YAML.load(File.read config_file)

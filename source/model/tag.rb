@@ -37,6 +37,12 @@ module MeDoList
       rescue SQLite3::ConstraintException
         # Tag already assigned to task. Do nothing.
       end
+
+      def initialize( data_row )
+        @id,@name = *data_row
+      end
+
+      attr_accessor :id, :name
     end
 
   end

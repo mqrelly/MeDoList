@@ -3,15 +3,15 @@
 
 # Setup MLD environment
 $MDL_VERSION = "v0.1"
-$MDL_BIN = File.expand_path(File.dirname __FILE__)
+$MDL_BIN_DIR = File.expand_path(File.dirname __FILE__)
 $MDL_USER_DIR = File.expand_path "~/.mdl"
 $MDL_DB_FILE = File.join $MDL_USER_DIR, "main.db"
 
 require "rubygems"
 require "bundler/setup"
-require File.join $MDL_BIN, "model", "model.rb"
-require File.join $MDL_BIN, "user_config.rb"
-require File.join $MDL_BIN, "cli_application.rb"
+require File.join $MDL_BIN_DIR, "model", "model.rb"
+require File.join $MDL_BIN_DIR, "user_config.rb"
+require File.join $MDL_BIN_DIR, "cli_application.rb"
 
 config = MeDoList::UserConfig.new $MDL_USER_DIR
 MeDoList::CliApplication.run(config, ARGV)
