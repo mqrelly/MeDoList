@@ -9,9 +9,25 @@ $MDL_DB_FILE = File.join $MDL_USER_DIR, "main.db"
 
 require "rubygems"
 require "bundler/setup"
+require "shellwords"
 require File.join $MDL_BIN_DIR, "model", "model.rb"
 require File.join $MDL_BIN_DIR, "user_config.rb"
 require File.join $MDL_BIN_DIR, "cli_application.rb"
 
+# Load configuration
 config = MeDoList::UserConfig.new $MDL_USER_DIR
-MeDoList::CliApplication.run(config, ARGV)
+
+# Substitute aliases in command line arguments
+aliases = config.get "alias"
+args = []
+ARGV.each do |arg|
+  r = aliases[arg]
+  if r.nil?
+    args << arg
+  else
+    args += Shellwords.split r
+  end
+end
+
+# Run the CLI app
+MeDoList::CliApplication.run(config, args)

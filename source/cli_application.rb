@@ -12,7 +12,7 @@ module MeDoList
     end
 
     def initialize( user_config, argv )
-      @usr_cfg = user_config
+      @config = user_config
       @globals = ArgsParser.new do
         option :verbose, /^-v|--verbose$/
         option :silent, /^-s|--silent$/
@@ -193,7 +193,7 @@ module MeDoList
       end
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+      Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -224,7 +224,7 @@ module MeDoList
       end
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+      Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -245,7 +245,7 @@ module MeDoList
       Model::Task.start db, task_id
 
       # Save LRT
-      Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+      Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
     rescue
       db.rollback if db && !db.closed?
       raise
@@ -303,7 +303,7 @@ module MeDoList
           end
 
           # Save LRT
-          Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+          Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
         end
       end
     end
@@ -334,7 +334,7 @@ module MeDoList
         Model::Task.set_status db, task_id, status_code
 
         # Save LRT
-        Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+        Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
       end
     end
 
@@ -364,7 +364,7 @@ module MeDoList
         Model::Task.set_deadline db, task_id, deadline
 
         # Save LRT
-        Model::LastReferencedTasks.put db, task_id, @usr_cfg.get["max-lrt-num"]
+        Model::LastReferencedTasks.put db, task_id, @config.get("max-lrt-num")
       end
     end
 

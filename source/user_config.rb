@@ -12,9 +12,9 @@ module MeDoList
       FileUtils.mkdir_p File.join @user_dir, "templates", "list"
       FileUtils.mkdir_p File.join @user_dir, "templates", "task"
       FileUtils.mkdir_p File.join @user_dir, "templates", "activity"
-      config_file = File.join @user_dir, "confing.yaml"
-      if File.exists? config_file
-        @conf = YAML.load(File.read config_file)
+      @config_file = File.join @user_dir, "confing.yaml"
+      if File.exists? @config_file
+        @conf = YAML.load(File.read @config_file)
 
         # Check config version
         # TODO: Maybe convert old config formats?
@@ -23,14 +23,41 @@ module MeDoList
         @conf = { "version" => CONFIG_VERSION }
         # No defualts yet
 
-        File.open(config_file,"w+") do |f|
+        File.open(@config_file,"w+") do |f|
           f.write @conf.to_yaml
         end
       end
     end
 
-    def get
-      @conf
+    def get( *path )
+      v = @conf
+      while path.size > 0 do
+        p = path.shift
+        v = v[p]
+        return v if v.nil?
+      end
+      v
+    end
+
+    def set( *path, value )
+      v = @conf
+      while path.size > 1 do
+        p = path.shift
+        v_next = v[p]
+        v[p] = v_next = Hash.new if v_next.nil?
+        v = v_next
+      end
+      v = value
+      write_config
+      v
+    end
+
+    private
+
+    def write_config
+      File.open(@config_file,"w+") do |f|
+        f.write @conf.to_yaml
+      end
     end
   end
 

@@ -8,11 +8,11 @@ MeDoList ToDo
 - Implement silent/verbose/default output everywhere.
 - Make dry-run mode for every operation.
 - Finish 'help' text.
-- Add aliasing capabilities.
 - Add buit in 'status' alias to quickly list relevant tasks
   (running, recently changed, deadline comming)
 - Add 'tag --list' cmd option to list all tags.
 - Add built in 'show' alias to show details of one task.
+- Add git like 'config' cmd for getting and setting configs.
 
 - Add UnitTests
 - Write Rakefile for automating install and tests
